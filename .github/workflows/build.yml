@@ -1,38 +1,36 @@
-name: Android CI for TalkBack
+name: Build TalkBack
 
 on:
-  push:
-    branches: [ "main", "master" ]
-  pull_request:
-    branches: [ "main", "master" ]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
+      - name: Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
 
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v3
+      - name: Gradle 8.13
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
 
-    - name: Build with build.sh
-      env:
-        ANDROID_SDK: ${{ env.ANDROID_HOME }}
-        GRADLE_DEBUG: --debug
-      run: |
-        chmod +x build.sh
-        ./build.sh
+      - name: Configure Android SDK
+        run: echo "ANDROID_SDK=$ANDROID_HOME" >> "$GITHUB_ENV"
 
-    - name: Upload APKs
-      uses: actions/upload-artifact@v4
-      with:
-        name: talkback-apks
-        path: '**/*.apk'
+      - name: Build TalkBack
+        run: ./build.sh
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: talkback-apk
+          path: "**/*.apk"
+          if-no-files-found: error
